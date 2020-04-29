@@ -4,10 +4,10 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-04-29 18:32:12
+ * @LastEditTime  : 2020-04-29 18:33:31
  -->
 
-# Lovelace DC1 Card
+# Lovelace Gaode Map Card
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
 
