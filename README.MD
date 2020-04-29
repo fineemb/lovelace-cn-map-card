@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-04-29 18:25:42
+ * @LastEditTime  : 2020-04-29 18:32:12
  -->
 
 # Lovelace DC1 Card
@@ -17,7 +17,8 @@
 + 支持前台自定义卡片配置.
 
 ## 预览
-![](https://bbs.hassbian.com/data/attachment/forum/202002/19/234739uawn9uwjyw8uwzu5.gif)
+![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/6/67bd320a6d0f3f7442c94df865d0dfafdb506291.png)
+![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/c/c38c535b7e5573e12f2f1c2a4746ea5875d4e202.png)
 
 ## HACS 安装
 搜索Gaode Map card, 或者手动添加地址安装
@@ -53,7 +54,7 @@
 | title | string | 选项 | 卡片标题
 | entities | entity id | **必选** | 需要显示的条目,支持person,zone,device_tracker
 | default_zoom | Number | 选项 | 地图默认缩放等级
-| dark_mode | boolean | 选项 | 地图黑暗模式开关
+| dark_mode | boolean | 选项 | 地图夜间黑暗模式开关
 | hours_to_show | Number | 选项 | 指定时间内的历史路径,这里是填的是小时
 | key | string | **必选** | 自己去高德申请key,内置的key说不定哪天就失效了.
 
