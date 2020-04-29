@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-04-29 18:33:31
+ * @LastEditTime  : 2020-04-29 18:48:45
  -->
 
 # Lovelace Gaode Map Card
@@ -29,7 +29,7 @@
     ``` yaml
     resources:
       - url: /local/community/lovelace-cn-map/cn-map-card.js
-        type: js
+        type: module
     ```
 1. 在Lovelace视图 `views.cards` 内部添加卡片配置
     ```yaml
