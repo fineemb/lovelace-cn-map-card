@@ -155,7 +155,7 @@ class CNMapCard extends HTMLElement {
       let entities = this.config.entities
       entities.forEach(function(el,index) {
         let entity = el.entity;
-        let hours_to_show =this.config.hours_to_show;
+        let hours_to_show =this.config.hours_to_show||0;
         let color = this._colors[index%this._colors.length];
         let domain = entity.split('.')[0]
         let objstates = hass.states[entity];
