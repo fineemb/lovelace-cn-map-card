@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-04-29 18:48:45
+ * @LastEditTime  : 2020-05-03 00:41:54
  -->
 
 # Lovelace Gaode Map Card
@@ -57,6 +57,10 @@
 | dark_mode | boolean | 选项 | 地图夜间黑暗模式开关
 | hours_to_show | Number | 选项 | 指定时间内的历史路径,这里是填的是小时
 | key | string | **必选** | 自己去高德申请key,内置的key说不定哪天就失效了.
+
+## 更新
+
+v1.1 修复未设置路径显示的时候出现空白的错误
 
 
 

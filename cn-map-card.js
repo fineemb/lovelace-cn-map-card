@@ -1,4 +1,8 @@
 
+console.info("%c  CN MAP CARD  \n%c Version 1.1 ",
+"color: orange; font-weight: bold; background: black", 
+"color: white; font-weight: bold; background: dimgray");
+
 import 'https://webapi.amap.com/loader.js';
 const deps = ['paper-input', 'paper-dropdown-menu', 'paper-item', 'paper-listbox'];
 deps.map(dep => {
