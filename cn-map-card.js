@@ -189,7 +189,7 @@ class CNMapCard extends HTMLElement {
               that.persons.push(marker);
 
               //历史路径
-              if(isInit){
+              if(isInit && hours_to_show>0){
                 const endTime = new Date();
                 const startTime = new Date();
                 startTime.setHours(endTime.getHours() - hours_to_show);
