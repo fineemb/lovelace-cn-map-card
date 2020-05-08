@@ -1,5 +1,4 @@
-
-console.info("%c  CN MAP CARD  \n%c Version 1.1 ",
+console.info("%c  GAODE MAP CARD  \n%c Version 1.2 ",
 "color: orange; font-weight: bold; background: black", 
 "color: white; font-weight: bold; background: dimgray");
 
@@ -18,7 +17,7 @@ const LitElement = Object.getPrototypeOf(
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-class CNMapCard extends HTMLElement {
+class GaodeMapCard extends HTMLElement {
   constructor() {
     super();
     this.markers = {};
@@ -50,7 +49,7 @@ class CNMapCard extends HTMLElement {
     this.root.appendChild(style);
     const hacard = document.createElement('ha-card');
     this.card = hacard;
-    hacard.className = 'cn-map-card';
+    hacard.className = 'gaode-map-card';
     hacard.innerHTML = `
       <div id="root">
         <div id="map"></div>
@@ -68,24 +67,26 @@ class CNMapCard extends HTMLElement {
     });
   }
   static getConfigElement() {
-    return document.createElement("cn-map-card-editor");
+    return document.createElement("gaode-map-card-editor");
   }
   static getStubConfig() {
     return {aspect_ratio: '1',
             dark_mode: false,
-            entities: [
-              {entity: "zone.home"}
-            ] }
+            entities: ["zone.home"] }
   }
   set hass(hass) {
     this._hass = hass;
-    let entities = this.config.entities
-    this.card.header=this.config.title
-    if(this.loaded){
 
+    this.entities = this.config.entities; 
+    this.card.header=this.config.title
+
+    if(this.loaded){
+      if(this.config.entities.length<1){
+        return;
+      }
       //更新标记点
       var oc = JSON.stringify(this.oldentities)
-      var nc = JSON.stringify(entities)
+      var nc = JSON.stringify(this.entities)
       if(oc!=nc){
         //更新标记点
         let ms = []
@@ -97,8 +98,8 @@ class CNMapCard extends HTMLElement {
         this._loadMap(false,{},hass)
       }else{
         //仅更新位置
-        for(var i in entities) {
-          let entityN = entities[i].entity
+        for(var i in this.entities) {
+          let entityN = this.entities[i]
           let objstates = hass.states[entityN];
           let gps = [objstates.attributes.longitude, objstates.attributes.latitude];
           const that  = this;
@@ -119,7 +120,7 @@ class CNMapCard extends HTMLElement {
         this.oldstyle = newstyle
       }
       //更新视界
-      if(this.fit === entities.length){
+      if(this.fit === this.entities.length){
         this.map.setFitView(this.persons, false, [40, 40, 40, 40])
         this.fit = 0
       }
@@ -138,117 +139,123 @@ class CNMapCard extends HTMLElement {
     }
   }
   setConfig(config) {
-    if (!config.entities) {
-      throw new Error('你需要定义一个实体');
-    }
     this.config = deepClone(config);
     let d = this.root.querySelector("#root")
     d.style.paddingBottom = 100*(this.config.aspect_ratio||1)+"%"
   }
   _loadMap(isInit,config,hass){
+    if(typeof AMap != "undefined" && isInit){
+      config = {};
+    }
     AMapLoader.load(config).then((AMap)=>{
       if(isInit){
         let mapContainer = this.root.querySelector("#map")
         this.map = new AMap.Map(mapContainer,{
           viewMode: '3D',
+          // center: [104.937478,35.439575],
           zoom: this.config.default_zoom || 9,
           mapStyle: "amap://styles/"+(this.config.dark_mode?'dark':'normal')
         });
         this.oldstyle = this.config.dark_mode
       }
-      let entities = this.config.entities
-      entities.forEach(function(el,index) {
-        let entity = el.entity;
-        let hours_to_show =this.config.hours_to_show||0;
-        let color = this._colors[index%this._colors.length];
-        let domain = entity.split('.')[0]
-        let objstates = hass.states[entity];
-        let gps = [objstates.attributes.longitude, objstates.attributes.latitude];
-        let entityPicture = objstates.attributes.entity_picture || '';
-        let entityName = objstates.attributes.friendly_name.split(' ').map(function (part) { return part.substr(0, 1); }).join('');
-        let markerContent = `<ha-entity-marker width="20" height="20" entity-id="`+entity+`" entity-name="`+entityName+`" entity-picture="`+entityPicture+`" entity-color="`+color+`">
-        </ha-entity-marker>`
-        const that  = this;
-        AMap.convertFrom(gps, 'gps', function (status, result) {
-          if (result.info === 'ok') {
-            //区域
-            new AMap.Circle({
-              map: that.map,
-              center: result.locations[0],  // 圆心位置
-              radius: objstates.attributes.radius || objstates.attributes.gps_accuracy, // 圆半径
-              fillColor: domain==='zone'?'rgb(255, 152, 0)':color,   // 圆形填充颜色
-              fillOpacity: 0.2,
-              strokeColor: domain==='zone'?'rgb(255, 152, 0)':color, // 描边颜色
-              strokeWeight: 3, // 描边宽度
-            });
-            //标记点
-            let marker = new AMap.Marker({
-              map: that.map,
-              position: result.locations[0],
-              content: domain==='zone'?`<ha-icon icon="`+objstates.attributes.icon+`"></ha-icon>`:markerContent,
-              zIndex: domain==='zone'?100:102,
-              anchor: 'center'
-            });
-            if(domain==='person'){
-              that.persons.push(marker);
+      let entities = this.entities
+      if(entities.length<1){
+        this.loaded = true;
+        this.oldentities = deepClone(entities)
+      }else{
+        entities.forEach(function(el,index) {
+          let entity = el;
+          let hours_to_show =this.config.hours_to_show||0;
+          let color = this._colors[index%this._colors.length];
+          let domain = entity.split('.')[0]
+          let objstates = hass.states[entity];
+          let gps = [objstates.attributes.longitude, objstates.attributes.latitude];
+          let entityPicture = objstates.attributes.entity_picture || '';
+          let entityName =objstates.attributes.friendly_name?objstates.attributes.friendly_name.split(' ').map(function (part) { return part.substr(0, 1); }).join('') : '';
+          let markerContent = `<ha-entity-marker width="20" height="20" entity-id="`+entity+`" entity-name="`+entityName+`" entity-picture="`+entityPicture+`" entity-color="`+color+`">
+          </ha-entity-marker>`
+          const that  = this;
+          AMap.convertFrom(gps, 'gps', function (status, result) {
+            if (result.info === 'ok') {
+              //区域
+              new AMap.Circle({
+                map: that.map,
+                center: result.locations[0],  // 圆心位置
+                radius: objstates.attributes.radius || objstates.attributes.gps_accuracy, // 圆半径
+                fillColor: domain==='zone'?'rgb(255, 152, 0)':color,   // 圆形填充颜色
+                fillOpacity: 0.2,
+                strokeColor: domain==='zone'?'rgb(255, 152, 0)':color, // 描边颜色
+                strokeWeight: 3, // 描边宽度
+              });
+              //标记点
+              let marker = new AMap.Marker({
+                map: that.map,
+                position: result.locations[0],
+                content: domain==='zone'?`<ha-icon icon="`+objstates.attributes.icon+`"></ha-icon>`:markerContent,
+                zIndex: domain==='zone'?100:102,
+                anchor: 'center'
+              });
+              if(domain==='person'){
+                that.persons.push(marker);
 
-              //历史路径
-              if(isInit && hours_to_show>0){
-                const endTime = new Date();
-                const startTime = new Date();
-                startTime.setHours(endTime.getHours() - hours_to_show);
-                
-                hass.callApi("GET", "history/period/"+startTime.toISOString()+"?filter_entity_id="+entity+"&significant_changes_only=0&end_time="+endTime.toISOString())
-                .then(function(res) {
-                  console.log(res);
-                  let arr = res[0]
-                  if (arr.length > 1) {
-                    var lineArr = []
-                    for(var i in arr) {
-                      let p = arr[i].attributes;
-                      if(p.longitude)lineArr.push([p.longitude,p.latitude]);
-                    }
-
-                    AMap.convertFrom(lineArr, 'gps', function (status, result) {
-                      if (result.info === 'ok') {
-                        var path2 = result.locations;
-                        new AMap.Polyline({
-                          map: that.map,
-                          path: path2,  
-                          zIndex: 200,
-                          strokeWeight: 3, 
-                          strokeColor: color, 
-                          strokeOpacity: 0.5,
-                          lineJoin: 'round' 
-                        });
-
-                        for(var i=0;i<path2.length;i+=1){
-                          var center = path2[i];
-                          new AMap.CircleMarker({
-                            map: that.map,
-                            center:center,
-                            strokeWeight:0,
-                            radius:4,
-                            fillColor:color,
-                            fillOpacity:0.5,
-                            zIndex:200,
-                            bubble:true
-                          })
-                        }
-
+                //历史路径
+                if(isInit && hours_to_show>0){
+                  const endTime = new Date();
+                  const startTime = new Date();
+                  startTime.setHours(endTime.getHours() - hours_to_show);
+                  
+                  hass.callApi("GET", "history/period/"+startTime.toISOString()+"?filter_entity_id="+entity+"&significant_changes_only=0&end_time="+endTime.toISOString())
+                  .then(function(res) {
+                    // console.log(res);
+                    let arr = res[0]
+                    if (arr.length > 1) {
+                      var lineArr = []
+                      for(var i in arr) {
+                        let p = arr[i].attributes;
+                        if(p.longitude)lineArr.push([p.longitude,p.latitude]);
                       }
-                    });
 
-                  }
-                })
+                      AMap.convertFrom(lineArr, 'gps', function (status, result) {
+                        if (result.info === 'ok') {
+                          var path2 = result.locations;
+                          new AMap.Polyline({
+                            map: that.map,
+                            path: path2,  
+                            zIndex: 200,
+                            strokeWeight: 3, 
+                            strokeColor: color, 
+                            strokeOpacity: 0.5,
+                            lineJoin: 'round' 
+                          });
+
+                          for(var i=0;i<path2.length;i+=1){
+                            var center = path2[i];
+                            new AMap.CircleMarker({
+                              map: that.map,
+                              center:center,
+                              strokeWeight:0,
+                              radius:4,
+                              fillColor:color,
+                              fillOpacity:0.5,
+                              zIndex:200,
+                              bubble:true
+                            })
+                          }
+
+                        }
+                      });
+
+                    }
+                  })
+                }
               }
+              that.markers[entity]=marker;
+              that.fit++;
+              if(that.fit === entities.length)that.loaded = true;
             }
-            that.markers[entity]=marker;
-            that.fit++;
-            if(that.fit === entities.length)that.loaded = true;
-          }
-        });
-      },this);
+          });
+        },this);
+      }
       this.oldentities = deepClone(entities)
     }).catch(e => {
         console.log(e);
@@ -331,9 +338,9 @@ function deepClone(value) {
     function(key) { result[key] = deepClone(value[key]); });
   return result;
 }
-customElements.define("cn-map-card", CNMapCard);
+customElements.define("gaode-map-card", GaodeMapCard);
 
-export class CnMapCardEditor extends LitElement {
+export class GaodeMapCardEditor extends LitElement {
 
   setConfig(config) {
     this.config = deepClone(config);
@@ -392,10 +399,10 @@ export class CnMapCardEditor extends LitElement {
         <h3>${this.hass.localize("ui.panel.lovelace.editor.card.generic.entities")} (${this.hass.localize("ui.panel.lovelace.editor.card.config.optional")})
         </h3>
         <div class="entities">
-          ${this.config.entities.map(entityConf =>  html`
+          ${this.config.entities.map(entity =>  html`
             <paper-input-container >
-              <ha-icon icon="${this.hass.states[entityConf.entity].attributes.icon || 'mdi:home'}" slot="prefix"></ha-icon>
-              <input type="text" value="${entityConf.entity}" slot="input" list="browsers" autocapitalize="none" @change="${this._changeEntity}">
+              <ha-icon icon="${this.hass.states[entity].attributes.icon || 'mdi:home'}" slot="prefix"></ha-icon>
+              <input type="text" value="${entity}" slot="input" list="browsers" autocapitalize="none" @change="${this._changeEntity}">
               <paper-icon-button slot="suffix" icon="mdi:close" title="${this.hass.localize("ui.panel.lovelace.editor.card.map.delete")}" @click=${this._delEntity}></paper-icon-button>
               <datalist id="browsers">
                     ${Object.keys(this.hass.states).filter(a => patt.test(a) ).map(entId => html`
@@ -418,7 +425,7 @@ export class CnMapCardEditor extends LitElement {
                   `)}
           </datalist>
         </paper-input-container>
-        <h3>${this.hass.localize("component.airvisual.config.step.user.data.api_key")}
+        <h3>API KEY
         <a href="//lbs.amap.com/dev/id/newuser" class="" target="_blank">获取KEY</a>
         </h3>
         <div class="gaode_key">
@@ -466,16 +473,11 @@ export class CnMapCardEditor extends LitElement {
     const entities = this.config.entities
     let id = -1 ;
     for (var i=0; i < entities.length ; ++i){
-      if(entities[i].entity===target.value){
+      if(entities[i]===target.value){
         id = i
       }
     }
     if(id>-1)entities.splice(id, 1);
-    // entities.push({"entity":target.value})
-    // this.config = {
-    //   ...this.config,
-    //   "entities": entities
-    // };
     this.configChanged(this.config)
 
   }
@@ -487,12 +489,12 @@ export class CnMapCardEditor extends LitElement {
     const entities = this.config.entities
     let flag = true;
     entities.forEach(item=>{
-      if(target.value===item.entity){ 
+      if(target.value===item){ 
         flag = false;
       }
     })
     if(flag){
-      entities.push({"entity":target.value})
+      entities.push(target.value)
       this.config = {
         ...this.config,
         "entities": entities
@@ -510,13 +512,13 @@ export class CnMapCardEditor extends LitElement {
     const entities = this.config.entities
     let id = -1 ;
     for (var i=0; i < entities.length ; ++i){
-      if(entities[i].entity===target.defaultValue){
+      if(entities[i]===target.defaultValue){
         id = i
       }
     }
     if(id>-1){
       delete entities[id];
-      entities[id] = {"entity":target.value}
+      entities[id] = target.value
     }
     this.configChanged(this.config)
   }
@@ -553,11 +555,11 @@ export class CnMapCardEditor extends LitElement {
   }
 }
 
-customElements.define("cn-map-card-editor", CnMapCardEditor);
+customElements.define("gaode-map-card-editor", GaodeMapCardEditor);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "cn-map-card",
+  type: "gaode-map-card",
   name: "地图(中国)",
   preview: true, // Optional - defaults to false
   description: "高德地图" // Optional

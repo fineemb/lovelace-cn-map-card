@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-05-03 00:41:54
+ * @LastEditTime  : 2020-05-08 16:58:40
  -->
 
 # Lovelace Gaode Map Card
@@ -15,6 +15,17 @@
 
 + 完全复刻官方的卡片
 + 支持前台自定义卡片配置.
+
+## 更新
+
++ v1.1
+  + 修复未设置路径显示的时候出现空白的错误
+
+  
++ v1.2 **破坏性更新** ( 注意下面的配置示例的变化 )
+  + 修复多个key冲突的问题
+  + 更改卡片关键字为 `gaode-map-card`
+  + 更改配置entities格式和官方map卡片一样
 
 ## 预览
 ![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/6/67bd320a6d0f3f7442c94df865d0dfafdb506291.png)
@@ -33,16 +44,16 @@
     ```
 1. 在Lovelace视图 `views.cards` 内部添加卡片配置
     ```yaml
-      type: 'custom:cn-map-card'
+      type: 'custom:gaode-map-card'
       default_zoom: '9'
       dark_mode: false
       hours_to_show: '168'
       entities:
-        - entity: person.a
-        - entity: person.b
-        - entity: person.c
-        - entity: zone.school
-        - entity: zone.home
+        - person.a
+        - person.b
+        - person.c
+        - zone.school
+        - zone.home
       key: f87e0c9c4f3e1e78f963075d142979f0
       title: Map
     ```
@@ -57,11 +68,3 @@
 | dark_mode | boolean | 选项 | 地图夜间黑暗模式开关
 | hours_to_show | Number | 选项 | 指定时间内的历史路径,这里是填的是小时
 | key | string | **必选** | 自己去高德申请key,内置的key说不定哪天就失效了.
-
-## 更新
-
-v1.1 修复未设置路径显示的时候出现空白的错误
-
-
-
-
