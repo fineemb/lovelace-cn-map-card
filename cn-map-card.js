@@ -1,6 +1,7 @@
-console.info("%c  GAODE MAP CARD  \n%c Version 1.2 ",
+console.info("%c  GAODE MAP CARD  \n%c Version 1.2.1 ",
 "color: orange; font-weight: bold; background: black", 
 "color: white; font-weight: bold; background: dimgray");
+
 
 import 'https://webapi.amap.com/loader.js';
 const deps = ['paper-input', 'paper-dropdown-menu', 'paper-item', 'paper-listbox'];
@@ -195,7 +196,7 @@ class GaodeMapCard extends HTMLElement {
                 zIndex: domain==='zone'?100:102,
                 anchor: 'center'
               });
-              if(domain==='person'){
+              if(domain==='person'||domain==='device_tracker'){
                 that.persons.push(marker);
 
                 //历史路径

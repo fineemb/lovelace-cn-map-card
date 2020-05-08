@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-05-08 16:58:40
+ * @LastEditTime  : 2020-05-08 23:19:28
  -->
 
 # Lovelace Gaode Map Card
@@ -27,6 +27,9 @@
   + 更改卡片关键字为 `gaode-map-card`
   + 更改配置entities格式和官方map卡片一样
 
++ v1.2.1
+  + 修复`device_tracker`未纳入范围显示的问题
+  
 ## 预览
 ![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/6/67bd320a6d0f3f7442c94df865d0dfafdb506291.png)
 ![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/c/c38c535b7e5573e12f2f1c2a4746ea5875d4e202.png)
