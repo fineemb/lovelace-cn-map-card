@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-05-08 23:19:28
+ * @LastEditTime  : 2020-05-16 12:44:04
  -->
 
 # Lovelace Gaode Map Card
@@ -29,6 +29,9 @@
 
 + v1.2.1
   + 修复`device_tracker`未纳入范围显示的问题
+
++ v1.2.2
+  + 修复覆盖层导致地图不能缩放移动的问题
   
 ## 预览
 ![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/6/67bd320a6d0f3f7442c94df865d0dfafdb506291.png)

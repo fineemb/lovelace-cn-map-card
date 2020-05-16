@@ -1,7 +1,7 @@
-console.info("%c  GAODE MAP CARD  \n%c Version 1.2.1 ",
+
+console.info("%c CN MAP CARD %c Version 1.2.2",
 "color: orange; font-weight: bold; background: black", 
 "color: white; font-weight: bold; background: dimgray");
-
 
 import 'https://webapi.amap.com/loader.js';
 const deps = ['paper-input', 'paper-dropdown-menu', 'paper-item', 'paper-listbox'];
@@ -53,12 +53,14 @@ class GaodeMapCard extends HTMLElement {
     hacard.className = 'gaode-map-card';
     hacard.innerHTML = `
       <div id="root">
-        <div id="map"></div>
+        <div id="map">
+          <div id="container"></div>
           <paper-icon-button
             id="fitbutton"
             icon="hass:image-filter-center-focus"
             title="Reset focus"
           ></paper-icon-button>
+        </div>
       </div>
     `;
     this.root.appendChild(hacard);
@@ -114,13 +116,13 @@ class GaodeMapCard extends HTMLElement {
         }
       }
 
-      //更新式样
+      // 更新式样
       let newstyle = this.config.dark_mode;
       if(this.oldstyle!=newstyle){
         this.map.setMapStyle("amap://styles/"+(newstyle?'dark':'normal'));
         this.oldstyle = newstyle
       }
-      //更新视界
+      // 更新视界
       if(this.fit === this.entities.length){
         this.map.setFitView(this.persons, false, [40, 40, 40, 40])
         this.fit = 0
@@ -135,7 +137,7 @@ class GaodeMapCard extends HTMLElement {
             version: "2.0",   // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
             plugins: ['AMap.MoveAnimation'] //插件列表
           },hass)
-        }, 1);
+        }, 500);
       }
     }
   }
@@ -150,11 +152,11 @@ class GaodeMapCard extends HTMLElement {
     }
     AMapLoader.load(config).then((AMap)=>{
       if(isInit){
-        let mapContainer = this.root.querySelector("#map")
+        let mapContainer = this.root.querySelector("#container")
         this.map = new AMap.Map(mapContainer,{
           viewMode: '3D',
-          // center: [104.937478,35.439575],
-          zoom: this.config.default_zoom || 9,
+          // center: [121.138066,31.992438],
+          // zoom: this.config.default_zoom || 9,
           mapStyle: "amap://styles/"+(this.config.dark_mode?'dark':'normal')
         });
         this.oldstyle = this.config.dark_mode
@@ -290,8 +292,7 @@ class GaodeMapCard extends HTMLElement {
                 overflow: hidden;
                 
               }
-      
-              .amap-container {
+              #map {
                 z-index: 0;
                 border: none;
                 position: absolute;
@@ -299,6 +300,19 @@ class GaodeMapCard extends HTMLElement {
                 left: 0;
                 width: 100%;
                 height: 100%;
+              }
+      
+              .amap-container {
+                z-index: 0;
+                border: none;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                position: relative;
+              }
+              iframe{
+                display: none;
               }
       
               paper-icon-button {
