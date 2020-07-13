@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-07-14 01:03:27
+ * @LastEditTime  : 2020-07-14 01:31:33
  -->
 
 # Lovelace Gaode Map Card
@@ -35,10 +35,10 @@
 
 + v1.2.3
   + 增加了实时路况的显示开关
+  + 修复了icon显示的问题
   
 ## 预览
-![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/6/67bd320a6d0f3f7442c94df865d0dfafdb506291.png)
-![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/c/c38c535b7e5573e12f2f1c2a4746ea5875d4e202.png)
+![](1.gif)
 
 ## HACS 安装
 搜索Gaode Map card, 或者手动添加地址安装

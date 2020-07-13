@@ -444,7 +444,7 @@ export class GaodeMapCardEditor extends LitElement {
             <paper-input-container >
               <ha-icon icon="${this.hass.states[entity].attributes.icon || 'mdi:home'}" slot="prefix"></ha-icon>
               <input type="text" value="${entity}" slot="input" list="browsers" autocapitalize="none" @change="${this._changeEntity}">
-              <paper-icon-button slot="suffix" icon="mdi:close" title="${this.hass.localize("ui.panel.lovelace.editor.card.map.delete")}" @click=${this._delEntity}></paper-icon-button>
+              <ha-icon-button slot="suffix" icon="mdi:close" title="${this.hass.localize("ui.panel.lovelace.editor.card.map.delete")}" @click=${this._delEntity}></ha-icon-button>
               <datalist id="browsers">
                     ${Object.keys(this.hass.states).filter(a => patt.test(a) ).map(entId => html`
                         <option value=${entId}>${this.hass.states[entId].attributes.friendly_name || entId}</option>
@@ -459,7 +459,7 @@ export class GaodeMapCardEditor extends LitElement {
         <paper-input-container >
           <ha-icon icon="mdi:home" slot="prefix"></ha-icon>
           <input type="text" value="" slot="input" list="browsers" autocapitalize="none" @change="">
-          <paper-icon-button slot="suffix" icon="mdi:plus" title="${this.hass.localize("ui.dialogs.helper_settings.input_select.add")}" @click=${this._addEntity}></paper-icon-button>
+          <ha-icon-button slot="suffix" icon="mdi:plus" title="${this.hass.localize("ui.dialogs.helper_settings.input_select.add")}" @click=${this._addEntity}></ha-icon-button>
           <datalist id="browsers">
                 ${Object.keys(this.hass.states).filter(a => patt.test(a) ).map(entId => html`
                     <option value=${entId}>${this.hass.states[entId].attributes.friendly_name || entId}</option>
