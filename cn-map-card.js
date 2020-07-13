@@ -1,9 +1,10 @@
-
-console.info("%c CN MAP CARD %c Version 1.2.2",
+console.info("%c  GAODE MAP CARD  \n%c Version 1.2.3 ",
 "color: orange; font-weight: bold; background: black", 
 "color: white; font-weight: bold; background: dimgray");
 
+
 import 'https://webapi.amap.com/loader.js';
+import 'https://unpkg.com/@material/mwc-formfield@0.17.2/mwc-formfield.js?module';
 const deps = ['paper-input', 'paper-dropdown-menu', 'paper-item', 'paper-listbox'];
 deps.map(dep => {
   if (!customElements.get(dep)) {
@@ -52,16 +53,12 @@ class GaodeMapCard extends HTMLElement {
     this.card = hacard;
     hacard.className = 'gaode-map-card';
     hacard.innerHTML = `
-      <div id="root">
-        <div id="map">
-          <div id="container"></div>
-          <paper-icon-button
-            id="fitbutton"
-            icon="hass:image-filter-center-focus"
-            title="Reset focus"
-          ></paper-icon-button>
-        </div>
+    <div id="root">
+      <div id="map">
+        <div id="container"></div>
+        <ha-icon-button id="fitbutton" icon="hass:image-filter-center-focus" title="Reset focus" role="button" tabindex="0" aria-disabled="false"></ha-icon-button>
       </div>
+  </div>
     `;
     this.root.appendChild(hacard);
     let fitButton = this.root.querySelector("#fitbutton")
@@ -75,6 +72,7 @@ class GaodeMapCard extends HTMLElement {
   static getStubConfig() {
     return {aspect_ratio: '1',
             dark_mode: false,
+            traffic: false,
             entities: ["zone.home"] }
   }
   set hass(hass) {
@@ -116,13 +114,19 @@ class GaodeMapCard extends HTMLElement {
         }
       }
 
-      // 更新式样
+      //更新式样
       let newstyle = this.config.dark_mode;
       if(this.oldstyle!=newstyle){
         this.map.setMapStyle("amap://styles/"+(newstyle?'dark':'normal'));
         this.oldstyle = newstyle
       }
-      // 更新视界
+      //实时路况图层
+      if(this.config.traffic){
+        this.trafficLayer.show();
+      }else{
+        this.trafficLayer.hide();
+      }
+      //更新视界
       if(this.fit === this.entities.length){
         this.map.setFitView(this.persons, false, [40, 40, 40, 40])
         this.fit = 0
@@ -137,7 +141,7 @@ class GaodeMapCard extends HTMLElement {
             version: "2.0",   // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
             plugins: ['AMap.MoveAnimation'] //插件列表
           },hass)
-        }, 500);
+        }, 100);
       }
     }
   }
@@ -156,10 +160,16 @@ class GaodeMapCard extends HTMLElement {
         this.map = new AMap.Map(mapContainer,{
           viewMode: '3D',
           // center: [121.138066,31.992438],
-          // zoom: this.config.default_zoom || 9,
+          zoom: this.config.default_zoom || 9,
           mapStyle: "amap://styles/"+(this.config.dark_mode?'dark':'normal')
         });
         this.oldstyle = this.config.dark_mode
+
+        //实时路况图层
+        this.trafficLayer = new AMap.TileLayer.Traffic({
+          zIndex: 10
+        });
+        this.trafficLayer.setMap(this.map);
       }
       let entities = this.entities
       if(entities.length<1){
@@ -301,21 +311,18 @@ class GaodeMapCard extends HTMLElement {
                 width: 100%;
                 height: 100%;
               }
-      
+
               .amap-container {
                 z-index: 0;
                 border: none;
+                position: relative;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                position: relative;
-              }
-              iframe{
-                display: none;
               }
       
-              paper-icon-button {
+              ha-icon-button {
                 position: absolute;
                 top: 7px;
                 left: 7px;
@@ -329,7 +336,9 @@ class GaodeMapCard extends HTMLElement {
                 width: 100%;
                 padding-bottom: 100%;
               }
-      
+              #container > iframe{
+                display:none;
+              }
               :host([is-panel]) #root {
                 height: 100%;
               }
@@ -398,11 +407,18 @@ export class GaodeMapCardEditor extends LitElement {
           ></paper-input>
         </div>
         <div class="side-by-side">
-          <ha-switch
-            ?checked="${this.config.dark_mode !== false}"
-            .configValue="${"dark_mode"}"
-            @change="${this._valueChanged}"
-            >${this.hass.localize("ui.panel.lovelace.editor.card.map.dark_mode")}</ha-switch>
+          <mwc-formfield
+          label=${this.hass.localize(
+            "ui.panel.lovelace.editor.card.map.dark_mode"
+          )}
+
+          >
+            <ha-switch
+              .checked="${this.config.dark_mode}"
+              .configValue="${"dark_mode"}"
+              @change="${this._valueChanged}"
+              ></ha-switch>
+          </mwc-formfield>
           <paper-input
             label="${this.hass.localize("ui.panel.lovelace.editor.card.map.hours_to_show")} (${this.hass.localize("ui.panel.lovelace.editor.card.config.optional")})"
             type="number"
@@ -410,6 +426,16 @@ export class GaodeMapCardEditor extends LitElement {
             .configValue="${"hours_to_show"}"
             @change="${this._valueChanged}"
           ></paper-input>
+        </div>
+        <div class="side-by-side">
+          <mwc-formfield label="实时路况">
+            <ha-switch
+              ?checked="${this.config.traffic !== false}"
+              .configValue="${"traffic"}"
+              @change="${this._valueChanged}"
+              ></ha-switch>
+              
+          </mwc-formfield>
         </div>
         <h3>${this.hass.localize("ui.panel.lovelace.editor.card.generic.entities")} (${this.hass.localize("ui.panel.lovelace.editor.card.config.optional")})
         </h3>
@@ -465,6 +491,9 @@ export class GaodeMapCardEditor extends LitElement {
     .side-by-side > * {
       flex: 1;
       padding-right: 4px;
+    }
+    ha-switch{
+      margin-right: 10px;
     }
     .entities > * {
       width: 100%;

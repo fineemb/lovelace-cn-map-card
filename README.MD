@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-05-16 12:44:04
+ * @LastEditTime  : 2020-07-14 01:03:27
  -->
 
 # Lovelace Gaode Map Card
@@ -32,6 +32,9 @@
 
 + v1.2.2
   + 修复覆盖层导致地图不能缩放移动的问题
+
++ v1.2.3
+  + 增加了实时路况的显示开关
   
 ## 预览
 ![](https://iobroker-1255708240.cos.ap-hongkong.myqcloud.com/original/2X/6/67bd320a6d0f3f7442c94df865d0dfafdb506291.png)
@@ -72,5 +75,6 @@
 | entities | entity id | **必选** | 需要显示的条目,支持person,zone,device_tracker
 | default_zoom | Number | 选项 | 地图默认缩放等级
 | dark_mode | boolean | 选项 | 地图夜间黑暗模式开关
+| traffic | boolean | 选项 | 实时路况
 | hours_to_show | Number | 选项 | 指定时间内的历史路径,这里是填的是小时
 | key | string | **必选** | 自己去高德申请key,内置的key说不定哪天就失效了.
