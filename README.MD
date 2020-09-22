@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-07-14 01:31:33
+ * @LastEditTime  : 2020-09-22 15:05:25
  -->
 
 # Lovelace Gaode Map Card
@@ -36,6 +36,13 @@
 + v1.2.3
   + 增加了实时路况的显示开关
   + 修复了icon显示的问题
+  
++ v1.2.4
+  + 增加了背景根据主题变化( 主题需要定义 card-background-color )
+  + 条目编辑改用官方的组件( 虽然官方也有bug )
+  + 整理代码修复bug若干
+  + 适配面板模式
+  + 增加一个方向的参数,配置(angle: sensor.che_liang_fang_xiang)根据方向传感器,地图自动调整方向
   
 ## 预览
 ![](1.gif)
