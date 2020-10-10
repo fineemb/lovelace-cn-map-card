@@ -1,4 +1,4 @@
-console.info("%c  GAODE MAP CARD  \n%c Version 1.2.4 ",
+console.info("%c  GAODE MAP CARD  \n%c Version 1.2.5 ",
 "color: orange; font-weight: bold; background: black", 
 "color: white; font-weight: bold; background: dimgray");
 
@@ -15,11 +15,7 @@ const LitElement = Object.getPrototypeOf(
 );
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
-const preloadCard = type => window.loadCardHelpers()
-  .then(({ createCardElement }) => createCardElement({type}))
-preloadCard("map");
-  // customElements.get("hui-map-card").getConfigElement()
-
+const includeDomains = ["device_tracker","person"];
 class GaodeMapCard extends HTMLElement {
   constructor() {
     super();
@@ -32,7 +28,7 @@ class GaodeMapCard extends HTMLElement {
     this.loaded = false;
     this.loadst = false;
     
-    this.oldentities = []
+    this.oldentities = [];
     this.old_mode;
     this.theme;
     this.positions = {};
@@ -79,7 +75,6 @@ class GaodeMapCard extends HTMLElement {
         this.root.querySelector("#fitbutton").classList.add("active")
         this.map.setPitch(80)
       }
-      //this.map.setFitView(this.persons, false, [40, 40, 40, 40])
     });
   }
   static getConfigElement() {
@@ -113,30 +108,32 @@ class GaodeMapCard extends HTMLElement {
         return;
       }
 
-      var oc = JSON.stringify(this.oldentities)
-      var nc = JSON.stringify(this.entities)
+      var oc = JSON.stringify(this.oldentities);
+      var nc = JSON.stringify(this.entities);
       if(oc!=nc){
         //更新标记点
         this.map.clearMap();
-        this.markers = {}
-        this.paths = {}
-        this.historyPath = {}
+        this.markers = {};
+        this.paths = {};
+        this.historyPath = {};
         this.entities.forEach(function(entity,index) {
-          let entityt = typeof entity === "string"?entity:entity.entity
-          this._addMarker(entityt,index)
+          let entityt = typeof entity === "string"?entity:entity.entity;
+          let type = entity.type?entity.type:"gps";
+          this._addMarker(entityt,index,type);
         },this);
-        this.oldentities = deepClone(this.entities)
+        this.oldentities = deepClone(this.entities);
       }else{
         //仅更新位置
         for(var i in this.entities) {
-          let entityt = typeof this.entities[i] === "string"?this.entities[i]:this.entities[i].entity
-          this._updateMarker(entityt)
+          let entityt = typeof this.entities[i] === "string"?this.entities[i]:this.entities[i].entity;
+          let type = this.entities[i].type?this.entities[i].type:"gps";
+          this._updateMarker(entityt,type);
         }
         //实时追踪
         if(this.trace){
           let angle = this.config.angle?hass.states[this.config.angle].state:0;
-          if(angle)this.map.setRotation(360-angle)
-          this.map.setFitView(this.persons, false, [40, 40, 40, 40])
+          if(angle)this.map.setRotation(360-angle);
+          this.map.setFitView(this.persons, false, [40, 40, 40, 40]);
         }
 
       }
@@ -144,13 +141,13 @@ class GaodeMapCard extends HTMLElement {
       //更新式样
       let dark_mode = this.config.dark_mode;
       let newTheme = hass.themes.default_theme;
-      let style = dark_mode
+      let style = dark_mode;
       
       if(this.old_mode!=dark_mode){
         if(dark_mode!="auto"){
           this.map.setMapStyle("amap://styles/"+style);
-          this.root.querySelector("#map").className = style
-          this.old_mode = dark_mode
+          this.root.querySelector("#map").className = style;
+          this.old_mode = dark_mode;
         }else{
           let cardColor = hass.themes.themes[newTheme]["card-background-color"];
           let lightness = cardColor?w3color(cardColor).lightness:1
@@ -235,10 +232,9 @@ class GaodeMapCard extends HTMLElement {
         console.log(e);
     })
   }
-  _updateMarker(entity){
+  _updateMarker(entity,type){
     let objstates = this._hass.states[entity];
-    if(!objstates.attributes.longitude){
-      this.fit++;
+    if(!objstates || !objstates.attributes.longitude){
       return
     } 
     let gps = [objstates.attributes.longitude, objstates.attributes.latitude];
@@ -255,7 +251,7 @@ class GaodeMapCard extends HTMLElement {
     // console.log(distance);
     if(distance>5){
       const that  = this;
-      AMap.convertFrom(gps, 'gps', function (status, result) {
+      AMap.convertFrom(gps, type, function (status, result) {
         if (result.info === 'ok' && that.markers[entity]) {
           that.markers[entity].moveTo(result.locations[0], {
               autoRotation: false
@@ -268,57 +264,70 @@ class GaodeMapCard extends HTMLElement {
     }
     this.positions[entity] = gps;
   }
-  _addMarker(entity,index){
-    let hours_to_show =this.config.hours_to_show||0;
+  _addMarker(entity,index,type){
+    
     let color = this._colors[index%this._colors.length];
-    let domain = entity.split('.')[0]
     let objstates = this._hass.states[entity];
-    if(!objstates.attributes.longitude){
+    if(!objstates || !objstates.attributes.longitude){
       this.fit++;
       return
     } 
-    let gps = [objstates.attributes.longitude, objstates.attributes.latitude];
+    let gps = new AMap.LngLat(objstates.attributes.longitude, objstates.attributes.latitude);
+    let that = this;
+    if(type=='gaode'){
+      that._showMarker(gps,entity,color,type);
+    }else{
+      AMap.convertFrom(gps, type, function (status, result) {
+        console.info(status)
+        if (result.info === 'ok') {
+          that._showMarker(result.locations[0],entity,color,type);
+        }
+      });
+    }
+  }
+
+  _showMarker(result,entity,color,type){
+    
+    let domain = entity.split('.')[0];
+    let hours_to_show =this.config.hours_to_show||0;
+    let objstates = this._hass.states[entity];
     let entityPicture = objstates.attributes.entity_picture || '';
     let entityName =objstates.attributes.friendly_name?objstates.attributes.friendly_name.split(' ').map(function (part) { return part.substr(0, 1); }).join('') : '';
-    let markerContent = `<ha-entity-marker width="20" height="20" entity-id="`+entity+`" entity-name="`+entityName+`" entity-picture="`+entityPicture+`" entity-color="`+color+`">
-    </ha-entity-marker>`
-    const that  = this;
-    AMap.convertFrom(gps, 'gps', function (status, result) {
-      if (result.info === 'ok') {
-        //区域
-        var circle = new AMap.Circle({
-          center: result.locations[0],  // 圆心位置
-          radius: objstates.attributes.radius || objstates.attributes.gps_accuracy, // 圆半径
-          fillColor: domain==='zone'?'rgb(255, 152, 0)':color,   // 圆形填充颜色
-          fillOpacity: 0.2,
-          zIndex: 101,
-          strokeColor: domain==='zone'?'rgb(255, 152, 0)':color, // 描边颜色
-          strokeWeight: 3, // 描边宽度
-        });
-        that.map.add(circle);
-        //标记点
-        let marker = new AMap.Marker({
-          map: that.map,
-          position: result.locations[0],
-          content: domain==='zone'?`<ha-icon icon="`+objstates.attributes.icon+`"></ha-icon>`:markerContent,
-          zIndex: domain==='zone'?102:103,
-          anchor: 'center'
-        });
-        if(domain==='person'||domain==='device_tracker'){
-          that.persons.push(marker);
+    let markerContent = `<ha-entity-marker width="20" height="20" entity-id="`+entity+`" entity-name="`+entityName+`" entity-picture="`+entityPicture+`" entity-color="`+color+`"></ha-entity-marker>`
 
-          //历史路径
-          if(hours_to_show>0){
-            that._gethistory(hours_to_show, entity, color)
-          }
-        }
-        that.markers[entity] = marker;
-        that.fit++;
-        if(that.fit === that.entities.length)that.loaded = true;
-      }
+    //区域
+    var circle = new AMap.Circle({
+      center: result,  // 圆心位置
+      radius: objstates.attributes.radius || objstates.attributes.gps_accuracy, // 圆半径
+      fillColor: domain==='zone'?'rgb(255, 152, 0)':color,   // 圆形填充颜色
+      fillOpacity: 0.2,
+      zIndex: 101,
+      strokeColor: domain==='zone'?'rgb(255, 152, 0)':color, // 描边颜色
+      strokeWeight: 3, // 描边宽度
     });
+    this.map.add(circle);
+    
+    //标记点
+    let marker = new AMap.Marker({
+      map: this.map,
+      position: result,
+      content: domain==='zone'?`<ha-icon icon="`+objstates.attributes.icon+`"></ha-icon>`:markerContent,
+      zIndex: domain==='zone'?102:103,
+      anchor: 'center'
+    });
+    if(domain==='person'||domain==='device_tracker'){
+      this.persons.push(marker);
+      //历史路径
+      if(hours_to_show>0){
+        this._gethistory(hours_to_show, entity, color, type)
+      }
+    }
+    this.markers[entity] = marker;
+    this.fit++;
+    if(this.fit === this.entities.length)this.loaded = true;
   }
-  _gethistory(hours, entity, color){
+  
+  _gethistory(hours, entity, color, type){
     const endTime = new Date();
     const startTime = new Date();
     startTime.setHours(endTime.getHours() - hours);
@@ -333,42 +342,74 @@ class GaodeMapCard extends HTMLElement {
         var lineArr = []
         for(var i in arr) {
           let p = arr[i].attributes;
-          if(p.longitude)lineArr.push([p.longitude,p.latitude]);
+          if(p.longitude)lineArr.push(new AMap.LngLat(p.longitude,p.latitude));
         }
 
-        AMap.convertFrom(lineArr, 'gps', function (status, result) {
-          if (result.info === 'ok') {
-            var path2 = result.locations;
-            if( that.paths[entity]){
-              that.paths[entity].setPath(path2);
-            }else{
-              that.paths[entity] = new AMap.Polyline({
-                map: that.map,
-                path: path2,  
-                zIndex: 200,
-                strokeWeight: 3, 
-                strokeColor: color, 
-                strokeOpacity: 0.5,
-                lineJoin: 'round' 
-              });
-  
-              for(var i=0;i<path2.length;i+=1){
-                var center = path2[i];
-                new AMap.CircleMarker({
-                  map: that.map,
-                  center:center,
-                  strokeWeight:0,
-                  radius:4,
-                  fillColor:color,
-                  fillOpacity:0.5,
-                  zIndex:200,
-                  bubble:true
-                });
-              }
-            }
+        if(type=='gaode'){
+          var path2 = lineArr;
+          if( that.paths[entity]){
+            that.paths[entity].setPath(path2);
+          }else{
+            that.paths[entity] = new AMap.Polyline({
+              map: that.map,
+              path: path2,  
+              zIndex: 200,
+              strokeWeight: 3, 
+              strokeColor: color, 
+              strokeOpacity: 0.5,
+              lineJoin: 'round' 
+            });
 
+            for(var i=0;i<path2.length;i+=1){
+              var center = path2[i];
+              new AMap.CircleMarker({
+                map: that.map,
+                center:center,
+                strokeWeight:0,
+                radius:4,
+                fillColor:color,
+                fillOpacity:0.5,
+                zIndex:200,
+                bubble:true
+              });
+            }
           }
-        });
+        }else{
+          AMap.convertFrom(lineArr, type, function (status, result) {
+            if (result.info === 'ok') {
+              var path2 = result.locations;
+              if( that.paths[entity]){
+                that.paths[entity].setPath(path2);
+              }else{
+                that.paths[entity] = new AMap.Polyline({
+                  map: that.map,
+                  path: path2,  
+                  zIndex: 200,
+                  strokeWeight: 3, 
+                  strokeColor: color, 
+                  strokeOpacity: 0.5,
+                  lineJoin: 'round' 
+                });
+    
+                for(var i=0;i<path2.length;i+=1){
+                  var center = path2[i];
+                  new AMap.CircleMarker({
+                    map: that.map,
+                    center:center,
+                    strokeWeight:0,
+                    radius:4,
+                    fillColor:color,
+                    fillOpacity:0.5,
+                    zIndex:200,
+                    bubble:true
+                  });
+                }
+              }
+  
+            }
+          });
+        }
+
       }
     })
   }
@@ -475,7 +516,11 @@ customElements.define("gaode-map-card", GaodeMapCard);
 export class GaodeMapCardEditor extends LitElement {
 
   setConfig(config) {
-    customElements.get("hui-map-card").getConfigElement()
+    const preloadCard = type => window.loadCardHelpers()
+      .then(({ createCardElement }) => createCardElement({type}))
+    preloadCard({type:'entities',entities:config.entities});
+    customElements.get("hui-entities-card").getConfigElement()
+
     this.config = deepClone(config);
     this._configEntities = config.entities
       ? this._processEditorEntities(config.entities)
@@ -551,6 +596,7 @@ export class GaodeMapCardEditor extends LitElement {
         <hui-entity-editor
           .hass="${this.hass}"
           .entities="${this._configEntities}"
+          .includeDomains=${includeDomains}
           @entities-changed="${this._entitiesValueChanged}"
         ></hui-entity-editor>
 
