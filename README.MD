@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-10-10 15:54:27
+ * @LastEditTime  : 2020-10-10 15:55:14
  -->
 
 # Lovelace Gaode Map Card
@@ -46,7 +46,7 @@
 + v1.2.5
   + 增加设备来源数据的坐标体系选择,默认不设置为`gps:GPS原始坐标`. 可选项为`baidu：百度经纬度` `mapbar：图吧经纬度` `gaode: 高德经纬度`
 
-    ````
+    ```` yaml
     aspect_ratio: '1'
     dark_mode: auto
     entities:
