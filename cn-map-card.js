@@ -1,4 +1,4 @@
-console.info("%c  GAODE MAP CARD  \n%c Version 1.2.5 ",
+console.info("%c  GAODE MAP CARD  \n%c Version 1.2.6 ",
 "color: orange; font-weight: bold; background: black", 
 "color: white; font-weight: bold; background: dimgray");
 
@@ -7,8 +7,8 @@ import 'https://webapi.amap.com/loader.js';
 import './w3color.js';
 import 'https://unpkg.com/@material/mwc-radio@0.18.0/mwc-radio.js?module';
 
-
-// customElements.get("hui-entity-editor")
+const preloadCard = type => window.loadCardHelpers()
+.then(({ createCardElement }) => createCardElement({type}));
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace")
@@ -28,7 +28,7 @@ class GaodeMapCard extends HTMLElement {
     this.loaded = false;
     this.loadst = false;
     
-    this.oldentities = [];
+    this.oldentities = []
     this.old_mode;
     this.theme;
     this.positions = {};
@@ -198,6 +198,9 @@ class GaodeMapCard extends HTMLElement {
     }
   }
   setConfig(config) {
+    preloadCard("map");
+    customElements.get("hui-map-card");
+
     this.config = deepClone(config);
     let d = this.root.querySelector("#root")
     d.style.paddingBottom = 100*(this.config.aspect_ratio||1)+"%"
@@ -278,7 +281,7 @@ class GaodeMapCard extends HTMLElement {
       that._showMarker(gps,entity,color,type);
     }else{
       AMap.convertFrom(gps, type, function (status, result) {
-        console.info(status)
+        // console.info(status)
         if (result.info === 'ok') {
           that._showMarker(result.locations[0],entity,color,type);
         }
@@ -516,8 +519,6 @@ customElements.define("gaode-map-card", GaodeMapCard);
 export class GaodeMapCardEditor extends LitElement {
 
   setConfig(config) {
-    const preloadCard = type => window.loadCardHelpers()
-      .then(({ createCardElement }) => createCardElement({type}))
     preloadCard({type:'entities',entities:config.entities});
     customElements.get("hui-entities-card").getConfigElement()
 

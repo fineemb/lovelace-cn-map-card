@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-10-10 15:55:14
+ * @LastEditTime  : 2020-10-20 11:50:41
  -->
 
 # Lovelace Gaode Map Card
@@ -45,6 +45,8 @@
   + 增加一个方向的参数,配置(angle: sensor.che_liang_fang_xiang)根据方向传感器,地图自动调整方向
 + v1.2.5
   + 增加设备来源数据的坐标体系选择,默认不设置为`gps:GPS原始坐标`. 可选项为`baidu：百度经纬度` `mapbar：图吧经纬度` `gaode: 高德经纬度`
++ v1.2.6
+  + 优化代码,修复116带来的一些问题
 
     ```` yaml
     aspect_ratio: '1'
