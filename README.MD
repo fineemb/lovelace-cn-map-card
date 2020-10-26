@@ -4,7 +4,7 @@
  * @Description   : 
  * @Date          : 2020-02-16 22:33:53
  * @LastEditors   : fineemb
- * @LastEditTime  : 2020-10-20 11:50:41
+ * @LastEditTime  : 2020-10-26 14:34:38
  -->
 
 # Lovelace Gaode Map Card
@@ -66,6 +66,8 @@
     type: 'custom:gaode-map-card'
 
   ````
++ v1.2.7
+  + 优化代码,减少载入
   
 ## 预览
 ![](1.gif)

@@ -1,11 +1,9 @@
-console.info("%c  GAODE MAP CARD  \n%c Version 1.2.6 ",
+console.info("%c  GAODE MAP CARD  \n%c Version 1.2.7 ",
 "color: orange; font-weight: bold; background: black", 
 "color: white; font-weight: bold; background: dimgray");
 
-
 import 'https://webapi.amap.com/loader.js';
 import './w3color.js';
-import 'https://unpkg.com/@material/mwc-radio@0.18.0/mwc-radio.js?module';
 
 const preloadCard = type => window.loadCardHelpers()
 .then(({ createCardElement }) => createCardElement({type}));
@@ -77,6 +75,14 @@ class GaodeMapCard extends HTMLElement {
       }
     });
   }
+  connectedCallback(){
+    // console.log(this.config);
+    this._loadMap({
+      key: this.config.key||"ce3b1a3a7e67fc75810ce1ba1f83c01a",   // 申请好的Web端开发者Key，首次调用 load 时必填 f87e0c9c4f3e1e78f963075d142979f0
+      version: "2.0",   // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
+      plugins: ['AMap.MoveAnimation'] //插件列表
+    });
+  }
   static getConfigElement() {
     return document.createElement("gaode-map-card-editor");
   }
@@ -97,133 +103,109 @@ class GaodeMapCard extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
     this.entities = this.config.entities; 
-    this.card.header=this.config.title
-
+    this.card.header=this.config.title;
+    if(!this.loaded || this.config.entities.length<1)return;
     if(this._isPanel){
-      this.root.querySelector("#root").style.paddingBottom = 0
-      this.setAttribute("is-panel","")
+      this.root.querySelector("#root").style.paddingBottom = 0;
+      this.setAttribute("is-panel","");
     }
-    if(this.loaded){
-      if(this.config.entities.length<1){
-        return;
-      }
-
-      var oc = JSON.stringify(this.oldentities);
-      var nc = JSON.stringify(this.entities);
-      if(oc!=nc){
-        //更新标记点
-        this.map.clearMap();
-        this.markers = {};
-        this.paths = {};
-        this.historyPath = {};
-        this.entities.forEach(function(entity,index) {
-          let entityt = typeof entity === "string"?entity:entity.entity;
-          let type = entity.type?entity.type:"gps";
-          this._addMarker(entityt,index,type);
-        },this);
-        this.oldentities = deepClone(this.entities);
-      }else{
-        //仅更新位置
-        for(var i in this.entities) {
-          let entityt = typeof this.entities[i] === "string"?this.entities[i]:this.entities[i].entity;
-          let type = this.entities[i].type?this.entities[i].type:"gps";
-          this._updateMarker(entityt,type);
-        }
-        //实时追踪
-        if(this.trace){
-          let angle = this.config.angle?hass.states[this.config.angle].state:0;
-          if(angle)this.map.setRotation(360-angle);
-          this.map.setFitView(this.persons, false, [40, 40, 40, 40]);
-        }
-
-      }
-
-      //更新式样
-      let dark_mode = this.config.dark_mode;
-      let newTheme = hass.themes.default_theme;
-      let style = dark_mode;
-      
-      if(this.old_mode!=dark_mode){
-        if(dark_mode!="auto"){
-          this.map.setMapStyle("amap://styles/"+style);
-          this.root.querySelector("#map").className = style;
-          this.old_mode = dark_mode;
-        }else{
-          let cardColor = hass.themes.themes[newTheme]["card-background-color"];
-          let lightness = cardColor?w3color(cardColor).lightness:1
-          let colorDark = lightness<0.5?true:false
-          style = colorDark?'dark':'normal'
-          this.map.setMapStyle("amap://styles/"+style);
-          this.root.querySelector("#map").className = style
-          this.old_mode = dark_mode
-          this.theme=hass.themes.default_theme
-        }
-      }
-      if(dark_mode==="auto"){
-        if(this.theme!=newTheme){
-          let cardColor = hass.themes.themes[newTheme]["card-background-color"];
-          let lightness = cardColor?w3color(cardColor).lightness:1
-          let colorDark = lightness<0.5?true:false
-          style = colorDark?'dark':'normal'
-          this.map.setMapStyle("amap://styles/"+style);
-          this.root.querySelector("#map").className = style
-          this.old_mode = dark_mode
-          this.theme=hass.themes.default_theme
-        }
-      }
-      //实时路况图层
-      if(this.config.traffic){
-        this.trafficLayer.show();
-      }else{
-        this.trafficLayer.hide();
-      }
-      //更新视界
-      // console.info(this.fit)
-      if(this.fit >= this.entities.length){
-        this.map.setFitView(this.persons, false, [40, 40, 40, 40])
-        this.fit = 0
-      }
+    var oc = JSON.stringify(this.oldentities);
+    var nc = JSON.stringify(this.entities);
+    if(oc!=nc){
+      //更新标记点
+      this.map.clearMap();
+      this.markers = {};
+      this.paths = {};
+      this.historyPath = {};
+      this.entities.forEach(function(entity,index) {
+        let entityt = typeof entity === "string"?entity:entity.entity;
+        let type = entity.type?entity.type:"gps";
+        this._addMarker(entityt,index,type);
+      },this);
+      this.oldentities = deepClone(this.entities);
     }else{
-      //首次加载
-      if(!this.loadst){
-        this.loadst = true;
-        setTimeout(() => {
-          this._loadMap({
-            key: this.config.key||"ce3b1a3a7e67fc75810ce1ba1f83c01a",   // 申请好的Web端开发者Key，首次调用 load 时必填 f87e0c9c4f3e1e78f963075d142979f0
-            version: "2.0",   // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
-            plugins: ['AMap.MoveAnimation'] //插件列表
-          })
-        }, 100);
+      //仅更新位置
+      for(var i in this.entities) {
+        let entityt = typeof this.entities[i] === "string"?this.entities[i]:this.entities[i].entity;
+        let type = this.entities[i].type?this.entities[i].type:"gps";
+        this._updateMarker(entityt,type);
       }
+      //实时追踪
+      if(this.trace){
+        let angle = this.config.angle?hass.states[this.config.angle].state:0;
+        if(angle)this.map.setRotation(360-angle);
+        this.map.setFitView(this.persons, false, [40, 40, 40, 40]);
+      }
+
+    }
+
+    //更新式样
+    let dark_mode = this.config.dark_mode;
+    let newTheme = hass.themes.default_theme;
+    let style = dark_mode;
+    
+    if(this.old_mode!=dark_mode){
+      if(dark_mode!="auto"){
+        this.map.setMapStyle("amap://styles/"+style);
+        this.root.querySelector("#map").className = style;
+        this.old_mode = dark_mode;
+      }else{
+        let cardColor = hass.themes.themes[newTheme]["primary-background-color"] || "#FFFFF";
+        let lightness = cardColor?w3color(cardColor).lightness:1;
+        let colorDark = lightness<0.5?true:false;
+        style = colorDark?'dark':'normal';
+        this.map.setMapStyle("amap://styles/"+style);
+        this.root.querySelector("#map").className = style;
+        this.old_mode = dark_mode;
+        this.theme=hass.themes.default_theme;
+      }
+    }
+    if(dark_mode==="auto"){
+      if(this.theme!=newTheme){
+        let cardColor = hass.themes.themes[newTheme]["primary-background-color"] || "#FFFFF";
+        let lightness = cardColor?w3color(cardColor).lightness:1;
+        let colorDark = lightness<0.5?true:false;
+        style = colorDark?'dark':'normal';
+        this.map.setMapStyle("amap://styles/"+style);
+        this.root.querySelector("#map").className = style;
+        this.old_mode = dark_mode;
+        this.theme=hass.themes.default_theme;
+      }
+    }
+    //实时路况图层
+    if(this.config.traffic){
+      this.trafficLayer.show();
+    }else{
+      this.trafficLayer.hide();
+    }
+    //更新视界
+    // console.info(this.fit)
+    if(this.fit >= this.entities.length){
+      this.map.setFitView(this.persons, false, [40, 40, 40, 40]);
+      this.fit = 0;
     }
   }
   setConfig(config) {
-    preloadCard("map");
+    preloadCard('map');
     customElements.get("hui-map-card");
 
     this.config = deepClone(config);
     let d = this.root.querySelector("#root")
-    d.style.paddingBottom = 100*(this.config.aspect_ratio||1)+"%"
+    d.style.paddingBottom = 100*(this.config.aspect_ratio||1)+"%";
   }
   _loadMap(config){
-    if(!this._hass.config.longitude)return
+    
     AMapLoader.load(config).then(()=>{
-      let mapContainer = this.root.querySelector("#container")
+      let mapContainer = this.root.querySelector("#container");
       this.map = new AMap.Map(mapContainer,{
         viewMode: '3D',
-        center:[this._hass.config.longitude,this._hass.config.latitude],
         zoom: this.config.default_zoom || 9
       });
-      let mode = this.config.dark_mode
-      let style
-      if(mode==="auto"){
-        style = "normal"
-      }else{
-        style = mode;
-      }
-      this.old_mode = mode
+      let mode = this.config.dark_mode;
+      let style = (mode==="auto")?"normal":mode;
+      this.old_mode = mode;
       this.map.setMapStyle("amap://styles/"+style);
-      this.root.querySelector("#map").className = style
+      this.root.querySelector("#map").className = style;
       
       //实时路况图层
       this.trafficLayer = new AMap.TileLayer.Traffic({
@@ -281,7 +263,7 @@ class GaodeMapCard extends HTMLElement {
       that._showMarker(gps,entity,color,type);
     }else{
       AMap.convertFrom(gps, type, function (status, result) {
-        // console.info(status)
+        // console.info(result.locations[0])
         if (result.info === 'ok') {
           that._showMarker(result.locations[0],entity,color,type);
         }
@@ -519,9 +501,6 @@ customElements.define("gaode-map-card", GaodeMapCard);
 export class GaodeMapCardEditor extends LitElement {
 
   setConfig(config) {
-    preloadCard({type:'entities',entities:config.entities});
-    customElements.get("hui-entities-card").getConfigElement()
-
     this.config = deepClone(config);
     this._configEntities = config.entities
       ? this._processEditorEntities(config.entities)
@@ -593,7 +572,6 @@ export class GaodeMapCardEditor extends LitElement {
               <mwc-radio id="b3" ?checked=${(dark_mode==='auto')} value="auto" name="style_mode" .configValue="${"dark_mode"}" @change="${this._valueChanged}"></mwc-radio>
           </mwc-formfield>
         </div>
-
         <hui-entity-editor
           .hass="${this.hass}"
           .entities="${this._configEntities}"
@@ -759,6 +737,11 @@ export class GaodeMapCardEditor extends LitElement {
       }
       return entityConf;
     });
+  }
+  firstUpdated(changedProperties) {
+    import('https://unpkg.com/@material/mwc-radio@0.18.0/mwc-radio.js?module');
+    preloadCard({type:'entities',geo_location_sources :''});
+    customElements.get("hui-entities-card").getConfigElement()
   }
 }
 
